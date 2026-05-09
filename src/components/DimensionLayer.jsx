@@ -26,9 +26,11 @@ const DragHandle = ({ position, onDragX, onDragY, cursor, active, size = 4 }) =>
   useEffect(() => {
     const move = (e) => {
       if (!dragging.current) return;
-      const dx =  (e.clientX - last.current.x) * DRAG;
-      const dy = -(e.clientY - last.current.y) * DRAG;
-      last.current = { x: e.clientX, y: e.clientY };
+      const cx = e.clientX ?? (e.touches?.[0]?.clientX ?? 0);
+      const cy = e.clientY ?? (e.touches?.[0]?.clientY ?? 0);
+      const dx =  (cx - last.current.x) * DRAG;
+      const dy = -(cy - last.current.y) * DRAG;
+      last.current = { x: cx, y: cy };
       if (dx && cbX.current) cbX.current(dx);
       if (dy && cbY.current) cbY.current(dy);
     };
@@ -37,11 +39,11 @@ const DragHandle = ({ position, onDragX, onDragY, cursor, active, size = 4 }) =>
       dragging.current = false;
       gl.domElement.style.cursor = '';
     };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup',   up);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup',   up);
     return () => {
-      window.removeEventListener('mousemove', move);
-      window.removeEventListener('mouseup',   up);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup',   up);
     };
   }, [gl]);
 
@@ -72,12 +74,14 @@ const DragHandle = ({ position, onDragX, onDragY, cursor, active, size = 4 }) =>
 // ── One profile-point's visual layer ─────────────────────────────────────────
 const PointLayer = ({
   pt, origIdx, sortedIndex, totalPoints,
-  nextPt,         // next sorted point (or null)
+  nextPt,
   height,
   maxR,
   active,
   onUpdatePoint,
   onSelect,
+  isLampBottom,
+  touchMode,
 }) => {
   const y  = pt.h * height;
   const r  = pt.r;
@@ -123,7 +127,7 @@ const PointLayer = ({
         onDragX={dragRadius}
         cursor="ew-resize"
         active={active}
-        size={active ? 5 : 3.5}
+        size={touchMode ? (active ? 10 : 8) : (active ? 5 : 3.5)}
       />
 
       {/* ── Center handle (drag up/down → height) ────────────────────────── */}
@@ -133,7 +137,7 @@ const PointLayer = ({
           onDragY={(dy) => dragHeight(0, dy)}
           cursor="ns-resize"
           active={active}
-          size={active ? 4 : 2.8}
+          size={touchMode ? (active ? 9 : 7) : (active ? 4 : 2.8)}
         />
       )}
 
@@ -178,7 +182,7 @@ const PointLayer = ({
 };
 
 // ── Main DimensionLayer ───────────────────────────────────────────────────────
-const DimensionLayer = ({ profilePoints, height, onUpdatePoint }) => {
+const DimensionLayer = ({ profilePoints, height, onUpdatePoint, isLamp = false, touchMode = false }) => {
   const [activeIdx, setActiveIdx] = useState(null);
 
   const sorted = [...profilePoints]
@@ -204,6 +208,8 @@ const DimensionLayer = ({ profilePoints, height, onUpdatePoint }) => {
           active={activeIdx === pt.origIdx}
           onUpdatePoint={onUpdatePoint}
           onSelect={handleSelect}
+          isLampBottom={isLamp && si === 0}
+          touchMode={touchMode}
         />
       ))}
     </group>

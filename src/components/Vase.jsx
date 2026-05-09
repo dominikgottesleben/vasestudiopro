@@ -79,9 +79,9 @@ const Vase = forwardRef(({ settings }, ref) => {
 
         r = Math.max(0.2, r);
 
-        // Linear Tilt: ensured to be positive dy/dh
+        // Linear Tilt: (cos - 1) keeps max-y == height (cos=1 → +0, cos=-1 → -2*tilt)
         const tiltIntensity = h * Math.min(tiltAmount, height * 0.9);
-        const y = h * height + tiltIntensity * Math.cos(phi - tiltDirRad);
+        const y = h * height + tiltIntensity * (Math.cos(phi - tiltDirRad) - 1);
 
         positions.push(Math.cos(phi + ht) * r, y, Math.sin(phi + ht) * r);
       }

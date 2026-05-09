@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const ProfileEditor = ({ points, onChange, height }) => {
+const ProfileEditor = ({ points, onChange, height, isLamp = false, touchMode = false }) => {
   const [draggingIdx, setDraggingIdx] = useState(null);
   const svgRef = useRef(null);
 
@@ -22,16 +22,24 @@ const ProfileEditor = ({ points, onChange, height }) => {
     };
   };
 
-  const handleMouseDown = (e, idx) => {
+  const getEventPos = (e) => {
+    if (e.touches && e.touches.length > 0)
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    return { clientX: e.clientX, clientY: e.clientY };
+  };
+
+  const handlePointerDown = (e, idx) => {
     e.stopPropagation();
     setDraggingIdx(idx);
   };
 
-  const handleMouseMove = (e) => {
+  const handlePointerMove = (e) => {
     if (draggingIdx === null) return;
+    if (e.cancelable) e.preventDefault();
+    const { clientX, clientY } = getEventPos(e);
     const rect = svgRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     let { h, r } = fromPx(x, y);
     if (draggingIdx === 0) h = 0;
     if (draggingIdx === points.length - 1) h = 1;
@@ -39,8 +47,6 @@ const ProfileEditor = ({ points, onChange, height }) => {
     newPoints[draggingIdx] = { h, r };
     onChange(newPoints);
   };
-
-  const handleMouseUp = () => setDraggingIdx(null);
 
   const addPoint = (e) => {
     const rect = svgRef.current.getBoundingClientRect();
@@ -52,8 +58,13 @@ const ProfileEditor = ({ points, onChange, height }) => {
   };
 
   useEffect(() => {
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => window.removeEventListener('mouseup', handleMouseUp);
+    const up = () => setDraggingIdx(null);
+    window.addEventListener('mouseup',  up);
+    window.addEventListener('touchend', up);
+    return () => {
+      window.removeEventListener('mouseup',  up);
+      window.removeEventListener('touchend', up);
+    };
   }, []);
 
   const sortedPoints = [...points].sort((a, b) => a.h - b.h);
@@ -68,14 +79,15 @@ const ProfileEditor = ({ points, onChange, height }) => {
         <span className="editor-title">Silhouette Profile</span>
         <button onClick={() => onChange([{h:0, r:40}, {h:0.25, r:65}, {h:0.6, r:35}, {h:1, r:50}])} className="btn-small">Reset</button>
       </div>
-      <svg 
+      <svg
         ref={svgRef}
-        width={width} 
-        height={h_px} 
+        width={width}
+        height={h_px}
         viewBox={`0 0 ${width} ${h_px}`}
-        onMouseMove={handleMouseMove}
+        onMouseMove={handlePointerMove}
+        onTouchMove={handlePointerMove}
         onDoubleClick={addPoint}
-        style={{ background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0', cursor: draggingIdx !== null ? 'grabbing' : 'crosshair' }}
+        style={{ background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0', cursor: draggingIdx !== null ? 'grabbing' : 'crosshair', touchAction: 'none', userSelect: 'none' }}
       >
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -113,16 +125,19 @@ const ProfileEditor = ({ points, onChange, height }) => {
           const { x, y } = toPx(p);
           const diam = (p.r * 2).toFixed(0);
           const isActive = draggingIdx === i;
+          const ptColor  = isActive ? '#059669' : '#10b981';
+          const dotR     = touchMode ? (isActive ? 18 : 14) : (isActive ? 10 : 8);
           return (
             <g key={`d-${i}`}>
               {/* Diameter Line */}
               <line x1={padding} y1={y} x2={x} stroke={isActive ? '#10b981' : '#e2e8f0'} strokeWidth={isActive ? 2 : 1} strokeDasharray={isActive ? 'none' : '2 2'} />
               {/* Point */}
-              <circle 
-                cx={x} cy={y} r={isActive ? 7 : 5.5} 
-                fill={isActive ? '#059669' : '#10b981'}
+              <circle
+                cx={x} cy={y} r={dotR}
+                fill={ptColor}
                 stroke="white" strokeWidth="2.5"
-                onMouseDown={(e) => handleMouseDown(e, i)}
+                onMouseDown={(e) => handlePointerDown(e, i)}
+                onTouchStart={(e) => { e.preventDefault(); handlePointerDown(e, i); }}
                 style={{ cursor: 'grab' }}
               />
               {/* Diam Label */}
@@ -136,7 +151,7 @@ const ProfileEditor = ({ points, onChange, height }) => {
       </svg>
       <div className="editor-hint">
         <b>Diameter & Height:</b> Drag points to adjust.<br/>
-        Double-click to add point.
+        Double-tap / double-click to add a point.
       </div>
     </div>
   );

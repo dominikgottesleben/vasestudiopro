@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated/test STL exports in project root (not source files)
+/*.stl
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
