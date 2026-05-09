@@ -15,10 +15,11 @@ const Vase = forwardRef(({ settings }, ref) => {
       height = 200,
       profilePoints = [{ h: 0, r: 40 }, { h: 0.25, r: 65 }, { h: 0.6, r: 35 }, { h: 1, r: 50 }],
       radialSegments = 72,
-      heightSegments = 120, // High res for smooth slicing
+      heightSegments = 120,
       twist = 0,
       sides = 6,
       geometryType = 'default',
+      diamondRows = 10,
       waveQuantity = 12,
       waveAmplitude = 0.04,
       surfaceEffect = 'smooth',
@@ -27,6 +28,8 @@ const Vase = forwardRef(({ settings }, ref) => {
       tiltAmount = 0,
       tiltDirection = 0,
     } = settings;
+
+    const isDiamond = geometryType === 'diamond';
 
     const sortedPts = [...profilePoints].sort((a, b) => a.h - b.h);
     const getRadius = (h) => {
@@ -43,8 +46,8 @@ const Vase = forwardRef(({ settings }, ref) => {
       return 50;
     };
 
-    const rs = Math.max(6, geometryType === 'polygon' ? sides : radialSegments);
-    const hs = Math.max(20, heightSegments);
+    const rs = Math.max(3, (geometryType === 'polygon' || isDiamond) ? sides : radialSegments);
+    const hs = isDiamond ? Math.max(2, diamondRows) : Math.max(20, heightSegments);
     const twistRad = (twist * Math.PI) / 180;
     const tiltDirRad = (tiltDirection * Math.PI) / 180;
 
@@ -56,34 +59,35 @@ const Vase = forwardRef(({ settings }, ref) => {
       const h = i / hs;
       const br = getRadius(h);
       const ht = h * twistRad;
-      
+      // Diamond: alternate rings offset by half a polygon step → rhombus facets
+      const rowOffset = isDiamond ? (i % 2) * (Math.PI / rs) : 0;
+
       for (let j = 0; j < rs; j++) {
         const phi = (j / rs) * Math.PI * 2;
         let r = br;
 
-        // Apply Surface Effects
-        if (surfaceEffect === 'ribbed') {
-          r *= 1 - ribDepth * ((Math.sin(phi * ribCount) + 1) * 0.5);
-        } else if (surfaceEffect === 'fluted') {
-          r += Math.max(0, Math.sin(phi * ribCount)) * ribDepth * br * 0.6;
-        } else if (surfaceEffect === 'organic') {
-          const n = Math.sin(phi * 4.1 + h * 6.3) * 0.5 + Math.cos(phi * 7.2 - h * 11.1) * 0.3;
-          r += n * ribDepth * br * 0.35;
-        } else if (surfaceEffect === 'corrugated') {
-          r += (Math.sin(h * Math.PI * 2 * ribCount) * 0.5 + 0.5) * ribDepth * br * 0.4;
-        }
-
-        if (geometryType === 'wave') {
-          r += Math.sin(phi * waveQuantity) * (waveAmplitude * br);
+        if (!isDiamond) {
+          if (surfaceEffect === 'ribbed') {
+            r *= 1 - ribDepth * ((Math.sin(phi * ribCount) + 1) * 0.5);
+          } else if (surfaceEffect === 'fluted') {
+            r += Math.max(0, Math.sin(phi * ribCount)) * ribDepth * br * 0.6;
+          } else if (surfaceEffect === 'organic') {
+            const n = Math.sin(phi * 4.1 + h * 6.3) * 0.5 + Math.cos(phi * 7.2 - h * 11.1) * 0.3;
+            r += n * ribDepth * br * 0.35;
+          } else if (surfaceEffect === 'corrugated') {
+            r += (Math.sin(h * Math.PI * 2 * ribCount) * 0.5 + 0.5) * ribDepth * br * 0.4;
+          }
+          if (geometryType === 'wave') {
+            r += Math.sin(phi * waveQuantity) * (waveAmplitude * br);
+          }
         }
 
         r = Math.max(0.2, r);
 
-        // Linear Tilt: (cos - 1) keeps max-y == height (cos=1 → +0, cos=-1 → -2*tilt)
         const tiltIntensity = h * Math.min(tiltAmount, height * 0.9);
         const y = h * height + tiltIntensity * (Math.cos(phi - tiltDirRad) - 1);
 
-        positions.push(Math.cos(phi + ht) * r, y, Math.sin(phi + ht) * r);
+        positions.push(Math.cos(phi + ht + rowOffset) * r, y, Math.sin(phi + ht + rowOffset) * r);
       }
     }
 
@@ -119,7 +123,7 @@ const Vase = forwardRef(({ settings }, ref) => {
     return geo;
   }, [settings]);
 
-  const flatShading = settings.geometryType === 'polygon';
+  const flatShading = settings.geometryType === 'polygon' || settings.geometryType === 'diamond';
 
   return (
     <mesh ref={ref} name="Vase" geometry={geometry} castShadow receiveShadow>

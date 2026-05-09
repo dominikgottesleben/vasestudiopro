@@ -21,12 +21,13 @@ const PRESETS = [
   { label: '🌀 Spiral', s: { height:200,twist:360,tiltAmount:0,tiltDirection:0,surfaceEffect:'smooth',ribCount:12,ribDepth:0.08,geometryType:'wave',waveQuantity:8,waveAmplitude:0.1,profilePoints:[{h:0,r:32},{h:0.3,r:55},{h:0.6,r:38},{h:1,r:48}],color:'#10b981',radialSegments:64,heightSegments:60,sides:6,wallThickness:2 }},
   { label: '⬡ Geo', s: { height:155,twist:40,tiltAmount:12,tiltDirection:0,surfaceEffect:'smooth',ribCount:12,ribDepth:0.08,geometryType:'polygon',waveQuantity:12,waveAmplitude:0.04,profilePoints:[{h:0,r:38},{h:0.2,r:52},{h:0.8,r:52},{h:1,r:38}],color:'#6366f1',radialSegments:64,heightSegments:60,sides:6,wallThickness:2 }},
   { label: '≋ Fluted', s: { height:190,twist:10,tiltAmount:22,tiltDirection:180,surfaceEffect:'fluted',ribCount:20,ribDepth:0.12,geometryType:'default',waveQuantity:12,waveAmplitude:0.04,profilePoints:[{h:0,r:28},{h:0.25,r:58},{h:0.65,r:36},{h:1,r:50}],color:'#e2e8f0',radialSegments:64,heightSegments:60,sides:6,wallThickness:2 }},
-  { label: '| Slim', s: { height:280,twist:0,tiltAmount:5,tiltDirection:0,surfaceEffect:'corrugated',ribCount:18,ribDepth:0.1,geometryType:'default',waveQuantity:12,waveAmplitude:0.04,profilePoints:[{h:0,r:18},{h:0.08,r:26},{h:0.5,r:23},{h:0.9,r:20},{h:1,r:18}],color:'#1e293b',radialSegments:64,heightSegments:60,sides:6,wallThickness:2 }},
+  { label: '| Slim', s: { height:280,twist:0,tiltAmount:5,tiltDirection:0,surfaceEffect:'corrugated',ribCount:18,ribDepth:0.1,geometryType:'default',waveQuantity:12,waveAmplitude:0.04,profilePoints:[{h:0,r:18},{h:0.08,r:26},{h:0.5,r:23},{h:0.9,r:20},{h:1,r:18}],color:'#1e293b',radialSegments:64,heightSegments:60,sides:6,diamondRows:12,wallThickness:2 }},
+  { label: '◇ Low-Poly', s: { height:180,twist:15,tiltAmount:0,tiltDirection:0,surfaceEffect:'smooth',ribCount:24,ribDepth:0.08,geometryType:'diamond',waveQuantity:12,waveAmplitude:0.04,profilePoints:[{h:0,r:32},{h:0.28,r:68},{h:0.65,r:42},{h:1,r:52}],color:'#3b82f6',radialSegments:64,heightSegments:60,sides:8,diamondRows:12,wallThickness:2 }},
 ];
 
 const DEFAULT = {
   height:200, profilePoints:[{h:0,r:40},{h:0.25,r:65},{h:0.6,r:35},{h:1,r:50}],
-  radialSegments:64, heightSegments:60, twist:45, sides:6,
+  radialSegments:64, heightSegments:60, twist:45, sides:8, diamondRows:12,
   geometryType:'wave', waveQuantity:12, waveAmplitude:0.04,
   surfaceEffect:'smooth', ribCount:24, ribDepth:0.08,
   tiltAmount:0, tiltDirection:0, color:'#10b981', wallThickness:2,
@@ -34,19 +35,21 @@ const DEFAULT = {
 
 // ─── LAMP PRESETS & DEFAULT ────────────────────────────────────────────────────
 const LAMP_PRESETS = [
-  { label: '🔔 Classic',  s: { height:130, twist:0,  surfaceEffect:'smooth',     ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.25,r:62},{h:0.7,r:47},{h:1,r:30}], color:'#f5f0e8' }},
-  { label: '| Taper',     s: { height:140, twist:0,  surfaceEffect:'smooth',     ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.4,r:55},{h:1,r:28}],                color:'#e2d5c4' }},
-  { label: '○ Drum',      s: { height:100, twist:0,  surfaceEffect:'smooth',     ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.15,r:62},{h:0.85,r:62},{h:1,r:56}], color:'#94a3b8' }},
-  { label: '≋ Fluted',    s: { height:140, twist:0,  surfaceEffect:'fluted',     ribCount:20, ribDepth:0.10, profilePoints:[{h:0,r:37},{h:0.3,r:58},{h:1,r:32}],                color:'#e2e8f0' }},
-  { label: '🌀 Spiral',   s: { height:130, twist:200,surfaceEffect:'smooth',     ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.45,r:60},{h:1,r:30}],               color:'#10b981' }},
-  { label: '○ Organic',   s: { height:120, twist:0,  surfaceEffect:'organic',    ribCount:8,  ribDepth:0.20, profilePoints:[{h:0,r:37},{h:0.3,r:65},{h:0.7,r:50},{h:1,r:33}],  color:'#ddd6fe' }},
+  { label: '🔔 Classic',  s: { height:130, twist:0,   surfaceEffect:'smooth',  ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.25,r:62},{h:0.7,r:47},{h:1,r:30}],  color:'#f5f0e8', sides:0 }},
+  { label: '| Taper',     s: { height:140, twist:0,   surfaceEffect:'smooth',  ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.4,r:55},{h:1,r:28}],                color:'#e2d5c4', sides:0 }},
+  { label: '○ Drum',      s: { height:100, twist:0,   surfaceEffect:'smooth',  ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.15,r:62},{h:0.85,r:62},{h:1,r:56}], color:'#94a3b8', sides:0 }},
+  { label: '≋ Fluted',    s: { height:140, twist:0,   surfaceEffect:'fluted',  ribCount:20, ribDepth:0.10, profilePoints:[{h:0,r:37},{h:0.3,r:58},{h:1,r:32}],                color:'#e2e8f0', sides:0 }},
+  { label: '🌀 Spiral',   s: { height:130, twist:200, surfaceEffect:'smooth',  ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.45,r:60},{h:1,r:30}],               color:'#10b981', sides:0 }},
+  { label: '○ Organic',   s: { height:120, twist:0,   surfaceEffect:'organic', ribCount:8,  ribDepth:0.20, profilePoints:[{h:0,r:37},{h:0.3,r:65},{h:0.7,r:50},{h:1,r:33}],  color:'#ddd6fe', sides:0 }},
+  { label: '⬡ Hex',       s: { height:130, twist:0,   surfaceEffect:'smooth',  ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.25,r:62},{h:0.7,r:47},{h:1,r:30}],  color:'#f5f0e8', sides:6 }},
+  { label: '◻ Quadrat',   s: { height:120, twist:45,  surfaceEffect:'smooth',  ribCount:16, ribDepth:0.06, profilePoints:[{h:0,r:37},{h:0.3,r:58},{h:1,r:32}],                color:'#6366f1', sides:4 }},
 ];
 
 const LAMP_DEFAULT = {
   height:130, profilePoints:[{h:0,r:37},{h:0.25,r:62},{h:0.7,r:47},{h:1,r:30}],
   radialSegments:64, heightSegments:60, twist:0,
   surfaceEffect:'smooth', ribCount:16, ribDepth:0.06,
-  color:'#f5f0e8', wallThickness:2,
+  color:'#f5f0e8', wallThickness:2, sides:0,
 };
 
 // ─── CIRCULAR GRID ────────────────────────────────────────────────────────────
@@ -345,7 +348,12 @@ export default function App() {
                       <div className="grp-label">Shape Type</div>
                       <Pills value={s.geometryType}
                         onChange={v => up('geometryType', v)}
-                        options={[{id:'default',label:'Smooth'},{id:'wave',label:'Wave'},{id:'polygon',label:'Polygon'}]}
+                        options={[
+                          {id:'default', label:'Smooth'},
+                          {id:'wave',    label:'Wave'},
+                          {id:'polygon', label:'Polygon'},
+                          {id:'diamond', label:'◇ Low-Poly'},
+                        ]}
                       />
                     </div>
 
@@ -358,10 +366,13 @@ export default function App() {
                       </div>
                     )}
 
-                    {s.geometryType === 'polygon' && (
+                    {(s.geometryType === 'polygon' || s.geometryType === 'diamond') && (
                       <div className="grp">
-                        <div className="grp-label">Polygon</div>
-                        <Field label="Faces" value={s.sides} min={3} max={16} onChange={v => up('sides', v)} />
+                        <div className="grp-label">{s.geometryType === 'diamond' ? 'Low-Poly' : 'Polygon'}</div>
+                        <Field label="Seiten" value={s.sides} min={3} max={16} onChange={v => up('sides', v)} />
+                        {s.geometryType === 'diamond' && (
+                          <Field label="Reihen" value={s.diamondRows ?? 12} min={3} max={40} onChange={v => up('diamondRows', v)} />
+                        )}
                       </div>
                     )}
                   </>
@@ -380,12 +391,25 @@ export default function App() {
                 </div>
 
                 {isLamp && (
-                  <div className="grp">
-                    <div className="grp-label">Klickmechanismus</div>
-                    <div className="lamp-hint">
-                      Klick-Kragen passt auf den BambuLab LED Kit Sockel. Export erzeugt zwei separate STL-Dateien.
+                  <>
+                    <div className="grp">
+                      <div className="grp-label">Querschnitt</div>
+                      <Pills
+                        value={(s.sides ?? 0) >= 3 ? 'polygon' : 'round'}
+                        onChange={v => up('sides', v === 'polygon' ? 6 : 0)}
+                        options={[{id:'round', label:'Rund'}, {id:'polygon', label:'Polygon'}]}
+                      />
+                      {(s.sides ?? 0) >= 3 && (
+                        <Field label="Seiten" value={s.sides} min={3} max={16} onChange={v => up('sides', v)} />
+                      )}
                     </div>
-                  </div>
+                    <div className="grp">
+                      <div className="grp-label">Klickmechanismus</div>
+                      <div className="lamp-hint">
+                        Klick-Kragen passt auf den BambuLab LED Kit Sockel. Export erzeugt zwei separate STL-Dateien.
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             )}

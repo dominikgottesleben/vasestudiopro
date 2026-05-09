@@ -27,7 +27,10 @@ const LampShade = forwardRef(({ settings }, ref) => {
       ribCount       = 16,
       ribDepth       = 0.06,
       wallThickness  = 2,
+      sides          = 0,  // 0 = round; >= 3 = polygon body
     } = settings;
+
+    const isPolygon = sides >= 3;
 
     const sortedPts = [...profilePoints].sort((a, b) => a.h - b.h);
 
@@ -44,8 +47,9 @@ const LampShade = forwardRef(({ settings }, ref) => {
       return 50;
     };
 
-    const rs       = Math.max(6, radialSegments);
-    const hs       = Math.max(20, heightSegments);
+    const rs        = isPolygon ? Math.max(3, sides) : Math.max(6, radialSegments);
+    const collarRs  = Math.max(32, radialSegments); // collar always round for snap mechanism
+    const hs        = Math.max(20, heightSegments);
     const twistRad = (twist * Math.PI) / 180;
     const topR     = getRadius(1);
     const topRInner = Math.max(1, topR - wallThickness);
@@ -145,18 +149,18 @@ const LampShade = forwardRef(({ settings }, ref) => {
       }
     }
 
-    // ── COLLAR VERTICES ───────────────────────────────────────────────────
+    // ── COLLAR VERTICES (always round — mechanical snap fit) ─────────────
     const boreN      = BORE_PROFILE.length;
     const collarBase = innerWallBase + (hs + DOME_SEGS) * rs;
 
     for (let k = 0; k < boreN; k++) {
       const { y: by, r: br } = BORE_PROFILE[k];
-      for (let j = 0; j < rs; j++) {
-        const phi = (j / rs) * Math.PI * 2;
+      for (let j = 0; j < collarRs; j++) {
+        const phi = (j / collarRs) * Math.PI * 2;
         positions.push(Math.cos(phi) * COLLAR_OUTER, by, Math.sin(phi) * COLLAR_OUTER);
       }
-      for (let j = 0; j < rs; j++) {
-        const phi = (j / rs) * Math.PI * 2;
+      for (let j = 0; j < collarRs; j++) {
+        const phi = (j / collarRs) * Math.PI * 2;
         positions.push(Math.cos(phi) * br, by, Math.sin(phi) * br);
       }
     }
@@ -230,11 +234,11 @@ const LampShade = forwardRef(({ settings }, ref) => {
 
     // ── COLLAR OUTER WALL ─────────────────────────────────────────────────
     for (let k = 0; k < boreN - 1; k++) {
-      for (let j = 0; j < rs; j++) {
-        const a = collarBase + k * (2 * rs) + j;
-        const b = collarBase + (k + 1) * (2 * rs) + j;
-        const c = collarBase + (k + 1) * (2 * rs) + (j + 1) % rs;
-        const d = collarBase + k * (2 * rs) + (j + 1) % rs;
+      for (let j = 0; j < collarRs; j++) {
+        const a = collarBase + k * (2 * collarRs) + j;
+        const b = collarBase + (k + 1) * (2 * collarRs) + j;
+        const c = collarBase + (k + 1) * (2 * collarRs) + (j + 1) % collarRs;
+        const d = collarBase + k * (2 * collarRs) + (j + 1) % collarRs;
         indices.push(a, b, c);
         indices.push(a, c, d);
       }
@@ -242,11 +246,11 @@ const LampShade = forwardRef(({ settings }, ref) => {
 
     // ── COLLAR INNER BORE ─────────────────────────────────────────────────
     for (let k = 0; k < boreN - 1; k++) {
-      for (let j = 0; j < rs; j++) {
-        const a = collarBase + k * (2 * rs) + rs + j;
-        const b = collarBase + (k + 1) * (2 * rs) + rs + j;
-        const c = collarBase + (k + 1) * (2 * rs) + rs + (j + 1) % rs;
-        const d = collarBase + k * (2 * rs) + rs + (j + 1) % rs;
+      for (let j = 0; j < collarRs; j++) {
+        const a = collarBase + k * (2 * collarRs) + collarRs + j;
+        const b = collarBase + (k + 1) * (2 * collarRs) + collarRs + j;
+        const c = collarBase + (k + 1) * (2 * collarRs) + collarRs + (j + 1) % collarRs;
+        const d = collarBase + k * (2 * collarRs) + collarRs + (j + 1) % collarRs;
         indices.push(a, c, b);
         indices.push(a, d, c);
       }
@@ -254,32 +258,51 @@ const LampShade = forwardRef(({ settings }, ref) => {
 
     // ── COLLAR BOTTOM CAP ─────────────────────────────────────────────────
     const lastK = boreN - 1;
-    for (let j = 0; j < rs; j++) {
-      const aO = collarBase + lastK * (2 * rs) + j;
-      const bO = collarBase + lastK * (2 * rs) + (j + 1) % rs;
-      const aI = collarBase + lastK * (2 * rs) + rs + j;
-      const bI = collarBase + lastK * (2 * rs) + rs + (j + 1) % rs;
+    for (let j = 0; j < collarRs; j++) {
+      const aO = collarBase + lastK * (2 * collarRs) + j;
+      const bO = collarBase + lastK * (2 * collarRs) + (j + 1) % collarRs;
+      const aI = collarBase + lastK * (2 * collarRs) + collarRs + j;
+      const bI = collarBase + lastK * (2 * collarRs) + collarRs + (j + 1) % collarRs;
       indices.push(aO, aI, bI);
       indices.push(aO, bI, bO);
     }
 
-    // ── COLLAR TOP DISC (y=0): outer wall → collar outer ring ─────────────
-    // Thin annular face connecting the lamp body bottom to the collar.
-    for (let j = 0; j < rs; j++) {
-      const shadeJ   = j;
-      const shadeJ1  = (j + 1) % rs;
-      const collarJ  = collarBase + j;
-      const collarJ1 = collarBase + (j + 1) % rs;
-      indices.push(shadeJ, collarJ1, collarJ);
-      indices.push(shadeJ, shadeJ1, collarJ1);
+    // ── COLLAR TOP DISC (y=0): outer body ring → collar outer ring ────────
+    // Bridges polygon body (rs verts) to round collar (collarRs verts) via
+    // two-pointer fan merge. Winding matches original round-to-round case.
+    {
+      const bodyVert   = (j) => j % rs;
+      const collarVert = (j) => collarBase + (j % collarRs);
+      let bi = 0, ci = 0;
+      while (bi < rs || ci < collarRs) {
+        const bAngle = (bi + 1) / rs;        // monotone, no modulo
+        const cAngle = (ci + 1) / collarRs;
+        const bCur = bodyVert(bi),   bNxt = bodyVert(bi + 1);
+        const cCur = collarVert(ci), cNxt = collarVert(ci + 1);
+        if (bi === rs) {
+          // body exhausted — fan remaining collar verts from last body vert
+          indices.push(bCur, cNxt, cCur);
+          ci++;
+        } else if (ci === collarRs) {
+          // collar exhausted — fan remaining body verts from last collar vert
+          indices.push(bCur, bNxt, cCur);
+          bi++;
+        } else if (bAngle <= cAngle) {
+          indices.push(bCur, bNxt, cCur);
+          bi++;
+        } else {
+          indices.push(bCur, cNxt, cCur);
+          ci++;
+        }
+      }
     }
 
     // ── COLLAR TOP RING (y=0): collar outer → collar inner bore ───────────
-    for (let j = 0; j < rs; j++) {
+    for (let j = 0; j < collarRs; j++) {
       const outerJ  = collarBase + j;
-      const outerJ1 = collarBase + (j + 1) % rs;
-      const innerJ  = collarBase + rs + j;
-      const innerJ1 = collarBase + rs + (j + 1) % rs;
+      const outerJ1 = collarBase + (j + 1) % collarRs;
+      const innerJ  = collarBase + collarRs + j;
+      const innerJ1 = collarBase + collarRs + (j + 1) % collarRs;
       indices.push(outerJ, innerJ, innerJ1);
       indices.push(outerJ, innerJ1, outerJ1);
     }
@@ -291,6 +314,8 @@ const LampShade = forwardRef(({ settings }, ref) => {
     return geo;
   }, [settings]);
 
+  const flatShading = (settings.sides ?? 0) >= 3;
+
   return (
     <mesh ref={ref} name="LampShade" geometry={geometry} castShadow receiveShadow>
       <meshStandardMaterial
@@ -298,6 +323,7 @@ const LampShade = forwardRef(({ settings }, ref) => {
         roughness={0.85}
         metalness={0.0}
         side={THREE.DoubleSide}
+        flatShading={flatShading}
       />
     </mesh>
   );
